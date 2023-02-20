@@ -1,2 +1,2 @@
 # QML
-Scripts for generating molecular representations and applying Kernel Ridge Regression models
+Wrappers for applying kernel ridge regression models using the QML-code library
