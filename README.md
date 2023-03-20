@@ -1,5 +1,5 @@
 # QML
-Wrappers for applying kernel ridge regression models using the QMLcode library : https://github.com/qmlcode/qml
+Wrappers for applying kernel ridge regression models using the QMLcode library : http://www.qmlcode.org/
 
 # Requirements
 * Numpy
