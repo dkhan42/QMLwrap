@@ -3,6 +3,18 @@ from qml import kernels
 from scipy.linalg import cho_solve
 from sklearn.model_selection import KFold
 from itertools import product
+from scipy.spatial.distance import euclidean, cityblock
+from scipy.stats import wasserstein_distance
+
+def p_distance_scipy(X,Y,p=2):
+    if p==1:
+        return cityblock(X,Y)
+    elif p==2:
+        return euclidean(X,Y)
+    elif p=='dot':
+        return kernels.linear_kernel(X,Y)
+    elif p=='wass':
+        return wasserstein_distance(X,Y)
 
 def p_distance(X,Y,p=2):
     if p==1:
@@ -13,7 +25,7 @@ def p_distance(X,Y,p=2):
         return kernels.linear_kernel(X,Y)
 
 
-def KRR(X_train,Y_train,X_test,params,lam,kernel='rbf',norm=2,dist1='na',dist2='na',FCHL=False,local=False,q1=None,q2=None):
+def KRR_global(X_train,Y_train,X_test,params,lam,kernel='rbf',norm=2,dist1='na',dist2='na',FCHL=False,local=False,q1=None,q2=None):
     '''
     Returns the Kernel Ridge Regression based predictions for global representations for a variety of kernels. Available options are Linear, Polynomial, Gaussian, Laplacian,
     Rational Quadratic, Matern 3/2 and Matern 5/2 kernels. The L1 and L2 norms can be used with all of the kernels. The norms are calculated using the QML-code library.
@@ -89,7 +101,7 @@ def covariance(dist,kernel,params):
 
 def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=None):
     """
-    Performs a cross-validated grid search for hyper-parameter optimization of KRR models using global representations. The best hyperparameters
+    Performs a cross-validated grid search for hyper-parameter optimization of KRR_global models using global representations. The best hyperparameters
     and their cross-validated mean absolute error score is returned as a dictionary. These include the kernel hyper-parameters and the regularizer value.
     """
     kf=KFold(n_splits=cv)
@@ -125,10 +137,10 @@ def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=No
             mae_new=[]
             for k in range(cv):
                 if FCHL==False:
-                    y=KRR(X_train[k],Y_train[k],X_test[k],{'length':j},i,
+                    y=KRR_global(X_train[k],Y_train[k],X_test[k],{'length':j},i,
                     kernel=kernel,norm=norm,dist1=dist[k][0],dist2=dist[k][1])
                 else:
-                    y=KRR(X_train[k],Y_train[k],X_test[k],{'length':j},i,FCHL=True,local=local,q1=Q_train[k],q2=Q_test[k])
+                    y=KRR_global(X_train[k],Y_train[k],X_test[k],{'length':j},i,FCHL=True,local=local,q1=Q_train[k],q2=Q_test[k])
                 if type(y)==str:
                     score=np.inf
                 else:
@@ -148,7 +160,7 @@ def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=No
         for i,j,a in product(params['lambda'],params['length'],params['alpha']):
             mae_new=[]
             for k in range(cv):
-                y=KRR(X_train[k],Y_train[k],X_test[k],{'length':j,'alpha':a},i,
+                y=KRR_global(X_train[k],Y_train[k],X_test[k],{'length':j,'alpha':a},i,
                 kernel=kernel,norm=norm,dist1=dist[k][0],dist2=dist[k][1])
                 if type(y)==str:
                     score=np.inf
@@ -167,7 +179,7 @@ def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=No
         for i,j,a in product(params['lambda'],params['sigma0'],params['sigma1']):
             mae_new=[]
             for k in range(cv):
-                y=KRR(X_train[k],Y_train[k],X_test[k],{'sigma0':j,'sigma1':a},i,
+                y=KRR_global(X_train[k],Y_train[k],X_test[k],{'sigma0':j,'sigma1':a},i,
                 kernel=kernel,norm=norm,dist1=dist[k][0],dist2=dist[k][1])
                 if type(y)==str:
                     score=np.inf
@@ -186,7 +198,7 @@ def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=No
         for i,p,j,a in product(params['lambda'],params['order'],params['sigma0'],params['sigma1']):
             mae_new=[]
             for k in range(cv):
-                y=KRR(X_train[k],Y_train[k],X_test[k],{'sigma0':j,'sigma1':a,'order':p},i,
+                y=KRR_global(X_train[k],Y_train[k],X_test[k],{'sigma0':j,'sigma1':a,'order':p},i,
                 kernel=kernel,norm=norm,dist1=dist[k][0],dist2=dist[k][1])
                 if type(y)==str:
                     score=np.inf
@@ -203,9 +215,9 @@ def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=No
         best={'mae':mae,'lambda':best_lambda,'sigma0':best_length,'sigma1':best_alpha,'order':best_order}
     return best
 
-def KRR_indexing(K1,Y_train,index_train,index_test,lam):
+def KRR_global_indexing(K1,Y_train,index_train,index_test,lam):
     """
-    Returns the KRR predictions when a precomputed kernel matrix for test+train set is applied. Requires the indices for the 
+    Returns the KRR_global predictions when a precomputed kernel matrix for test+train set is applied. Requires the indices for the 
     training and test sets and the value of the regularizer.
     """
     K=K1[index_train][:,index_train]
@@ -223,16 +235,12 @@ def KRR_indexing(K1,Y_train,index_train,index_test,lam):
             k=K1[index_train][:,index_test]
             return np.dot(k.T,alpha)
 
-def KRR_local(X_train,Q_train,Y_train,X_test,Q_test,kernel,sigma,lam):
+def KRR_global_local(X_train,Q_train,Y_train,X_test,Q_test,sigma,lam):
     """
-    Returns the KRR predictions for local representations. Available options for the kernels are the local Gaussian and Laplacian kernels
+    Returns the KRR_global predictions for local representations. Available options for the kernels are the local Gaussian and Laplacian kernels
      as implemented in the QML-code library.
     """
-    if kernel in ['gaussian','rbf','Gaussian']:
-        K=kernels.get_local_symmetric_kernel(X_train,Q_train,[sigma])
-    else:
-        K=kernels.get_local_symmetric_kernel_laplacian_danish(X_train,Q_train,[sigma])
-    #print(K.shape)
+    K=kernels.get_local_symmetric_kernel(X_train,Q_train,[sigma])
     K+=(np.eye(K.shape[0])*lam)
     try:
             L=np.linalg.cholesky(K)
@@ -244,31 +252,12 @@ def KRR_local(X_train,Q_train,Y_train,X_test,Q_test,kernel,sigma,lam):
         except:
             return 'Cholesky decomposition failed, check distance matrices'
         else:
-            if kernel in ['gaussian','rbf','Gaussian']:
-                k=kernels.get_local_kernels(X_train,X_test,Q_train,Q_test,[sigma]).T
-            else:
-                k=kernels.get_local_kernel_laplacian_danish(X_train,X_test,Q_train,Q_test,[sigma]).T
-            return np.dot(k.T,alpha)
-
-def KRR_fchl19(X_train,Q_train,Y_train,X_test,Q_test,sigma,lam):
-    K=kernels.get_local_symmetric_kernels(X_train,Q_train,[sigma])[0]
-    K+=(np.eye(K.shape[0])*lam)
-    try:
-            L=np.linalg.cholesky(K)
-    except:
-        return 'Gram matrix is not PSD'
-    else:
-        try:
-            alpha=cho_solve((L,True),Y_train)
-        except:
-            return 'Cholesky decomposition failed, check distance matrices'
-        else:
-            k=kernels.get_local_kernels(X_train,X_test,Q_train,Q_test,[sigma])[0].T
+            k=kernels.get_local_kernels(X_train,X_test,Q_train,Q_test,[sigma]).T
             return np.dot(k.T,alpha)
 
 def GridSearchCV_local(X,Q,Y,params,kernel='Gaussian',cv=4):
     """
-    Performs a cross-validated grid search for hyper-parameter optimization of KRR models using local representations. The best hyperparameters
+    Performs a cross-validated grid search for hyper-parameter optimization of KRR_global models using local representations. The best hyperparameters
     and their cross-validated mean absolute error score is returned as a dictionary. These include the kernel hyper-parameters and the regularizer value.
     """
     kf=KFold(n_splits=cv)
@@ -287,7 +276,7 @@ def GridSearchCV_local(X,Q,Y,params,kernel='Gaussian',cv=4):
     for i,j in list(product(params['lambda'],params['length'])):
         mae_new=[]
         for k in range(cv):
-            y=KRR_local(X_train[k],Q_train[k],Y_train[k],X_test[k],Q_test[k],kernel,j,i)
+            y=KRR_global_local(X_train[k],Q_train[k],Y_train[k],X_test[k],Q_test[k],kernel,j,i)
             if type(y)==str:
                 score=np.inf
             else:
@@ -304,40 +293,7 @@ def GridSearchCV_local(X,Q,Y,params,kernel='Gaussian',cv=4):
             best={'mae':mae,'lambda':'none','length':'none'}
     return best
 
-def GridSearchCV_fchl19(X,Q,Y,params,cv=4):
-    kf=KFold(n_splits=cv)
-    X_train,X_test=[],[]
-    Q_train,Q_test=[],[]
-    Y_train,Y_test=[],[]
-    for train,test in kf.split(X):
-        X_train.append(X[train])
-        Y_train.append(Y[train])
-        Q_train.append(Q[train])
-        X_test.append(X[test])
-        Y_test.append(Y[test])
-        Q_test.append(Q[test])
-    mae=np.inf
-    for i,j in product(params['lambda'],params['length']):
-        mae_new=[]
-        for k in range(cv):
-            y=KRR_fchl19(X_train[k],Q_train[k],Y_train[k],X_test[k],Q_test[k],j,i)
-            if type(y)==str:
-                score=np.inf
-            else:
-                score=np.mean(np.abs(Y_test[k]-np.array(y)))
-            mae_new.append(score)
-        val=np.mean(mae_new)
-        if val<mae:
-            mae=val
-            best_lambda=i
-            best_length=j
-        try:
-            best={'mae':mae,'lambda':best_lambda,'length':best_length}
-        except:
-            best={'mae':mae,'lambda':'none','length':'none'}
-    return best
-
-def KRR_soap(X_train,Y_train,X_test,kernel='average',metric='rbf',gamma=1,lam=1e-6,normalized=False):
+def KRR_global_soap(X_train,Y_train,X_test,kernel='average',metric='rbf',gamma=1,lam=1e-6,normalized=False):
     if kernel=='average':
         from dscribe.kernels import AverageKernel
         if metric=='linear':
@@ -382,7 +338,7 @@ def GridSearchCV_soap(X,Y,params,cv=4,kernel='average',metric='rbf',normalized=F
     for i,j in product(params['lambda'],params['length']):
         mae_new=[]
         for k in range(cv):
-            y=KRR_soap(X_train[k],Y_train[k],X_test[k],kernel=kernel,metric=metric,gamma=j,lam=i,normalized=normalized)
+            y=KRR_global_soap(X_train[k],Y_train[k],X_test[k],kernel=kernel,metric=metric,gamma=j,lam=i,normalized=normalized)
             if type(y)==str:
                 score=np.inf
             else:
@@ -419,7 +375,7 @@ def clf_score(y_pred, y_true):
     same_labels = np.sum(y_pred==y_true)
     return same_labels/len(y_true)
 
-def GridSearch_SVC(k_list, lam_list, Y_train, index_train, index_test, Y_test, progress=True):
+def GridSearch_SVC(k_list, lam_list, Y_train, index_train, index_test, Y_test, progress=False):
     score = 0
     from itertools import product
     if progress == True:
@@ -440,13 +396,13 @@ def GridSearch_SVC(k_list, lam_list, Y_train, index_train, index_test, Y_test, p
                 score = jac
     return {'index': best[0], 'lambda': best[1]}
 
-def GridSearch_KRC(k_list, lam_list, Y_train, index_train, index_test, Y_test, progress=True):
-    score = 0
+def GridSearch_KRC(k_list, lam_list, Y_train, index_train, index_test, Y_test, progress=False):
+    score = -1
     from itertools import product
     if progress == True:
         from tqdm import tqdm
         for i, lam in tqdm(list(product(range(len(k_list)), lam_list))):
-            y_pred = KRR_indexing(k_list[i], Y_train, index_train, index_test, lam=lam)
+            y_pred = KRR_global_indexing(k_list[i], Y_train, index_train, index_test, lam=lam)
             if type(y_pred)==str:
                 jac = 0
             else:
@@ -456,7 +412,7 @@ def GridSearch_KRC(k_list, lam_list, Y_train, index_train, index_test, Y_test, p
                 score = jac
     else:
         for i, lam in list(product(range(len(k_list)), lam_list)):
-            y_pred = KRR_indexing(k_list[i], Y_train, index_train, index_test, lam=lam)
+            y_pred = KRR_global_indexing(k_list[i], Y_train, index_train, index_test, lam=lam)
             if type(y_pred)==str:
                 jac = 0
             else:
