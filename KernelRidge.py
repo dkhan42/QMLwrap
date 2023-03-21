@@ -133,7 +133,7 @@ def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=No
             mae_new=[]
             for k in range(cv):
                 if FCHL==False:
-                    y=KRR_global(X_train[k],Y_train[k],X_test[k],{'length':j},i,
+                    y=KRR_global(X_train[k],Y_train[k],X_test[k],{'length':j,'lambda':i},
                     kernel=kernel,norm=norm,dist1=dist[k][0],dist2=dist[k][1])
                 else:
                     y=KRR_global(X_train[k],Y_train[k],X_test[k],{'length':j},i,FCHL=True,local=local,q1=Q_train[k],q2=Q_test[k])
@@ -273,7 +273,7 @@ def GridSearchCV_local(X,Q,Y,params,kernel='Gaussian',cv=4):
     for i,j in list(product(params['lambda'],params['length'])):
         mae_new=[]
         for k in range(cv):
-            y=KRR_local(X_train[k],Q_train[k],Y_train[k],X_test[k],Q_test[k],kernel,j,i)
+            y=KRR_local(X_train[k],Q_train[k],Y_train[k],X_test[k],Q_test[k],kernel,{'length':j,'lambda':i})
             if type(y)==str:
                 score=np.inf
             else:
