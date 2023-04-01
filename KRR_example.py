@@ -37,7 +37,7 @@ print(best_params) #print to see the dictionary containing the best found hyper 
 
 #performing kernel ridge regression using the best hyper-parameters found
 preds = KRR_global(cm[train_idx], energies[train_idx], cm[test_idx], 
-            best_params, kernel='laplacian', norm=1) #use kernel = 'gaussian', norm = 2 for the gaussian kernel
+            best_params, kernel='laplacian', norm=1) #use kernel = 'gaussian', norm = 2 for the gaussian kernel, can mix-match kernels and norms for fun (and large errors)
 
 
 ''' 
