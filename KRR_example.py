@@ -20,6 +20,8 @@ from KernelRidge import GridSearchCV, KRR_global
 best_params = GridSearchCV(cm[train_idx],energies[train_idx], param_grid, 
                            kernel = 'laplacian', norm = 1, cv = 4) #4-fold cross-validated grid search, use kernel = 'gaussian', norm = 2 for the gaussian kernel
 
+print(best_params) #print to see the dictionary containing the best found hyper params and the corresponding best mean absolute error
+
 #performing kernel ridge regression using the best hyper-parameters found
 preds = KRR_global(cm[train_idx], energies[train_idx], cm[test_idx], 
             best_params, kernel='laplacian', norm=1) #use kernel = 'gaussian', norm = 2 for the gaussian kernel
@@ -34,6 +36,8 @@ from KernelRidge import GridSearchCV_local, KRR_local
 best_params = GridSearchCV_local(fchl[train_idx], charges[train_idx], energies[train_idx], 
                                  param_grid, cv = 4) #4-fold cross-validated grid search
 
+print(best_params) #print to see the dictionary containing the best found hyper params and the corresponding best mean absolute error
+
 #performing kernel ridge regression using the best hyper-parameters found
 preds = KRR_local(fchl[train_idx], charges[train_idx], energies[train_idx], fchl[test_idx], charges[test_idx], 
             best_params)
@@ -46,7 +50,7 @@ from qml.kernels import get_local_symmetric_kernel
 K = get_local_symmetric_kernel(fchl, charges, SIGMA= 1) #calculating the kernel for the entire dataset, evaluating the symmetric kernel cuts the calculation time in half
 
 from KernelRidge import KRR_indexing
-preds = KRR_indexing(K, energies[train_idx], train_idx, test_idx, lam = 1e-6)
+preds = KRR_indexing(K, energies[train_idx], train_idx, test_idx, lam = 1e-6) #can put a loop over the lambda values
 
 
 ''' 
@@ -59,7 +63,7 @@ from KernelRidge import KRR_indexing
 y, maes = [], []
 
 for K in K_list:
-    preds = KRR_indexing(K, energies[train_idx], train_idx, test_idx, lam = 1e-6)
+    preds = KRR_indexing(K, energies[train_idx], train_idx, test_idx, lam = 1e-6) #can put a loop over the lambda values
     error = np.mean(np.abs(preds - energies[test_idx]))
     y.append(preds)
     maes.append(error)
