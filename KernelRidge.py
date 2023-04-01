@@ -40,7 +40,7 @@ def KRR_global(X_train,Y_train,X_test,best_params,kernel='rbf',norm=2,dist1='na'
         try:
             L=np.linalg.cholesky(K)
         except:
-            return 'Gram matrix is not PSD'
+            return 'Gram Matrix is not positive definite'
         else:
             try:
                 alpha=cho_solve((L,True),Y_train)
@@ -59,7 +59,7 @@ def KRR_global(X_train,Y_train,X_test,best_params,kernel='rbf',norm=2,dist1='na'
         try:
             L=np.linalg.cholesky(K)
         except:
-            return 'Gram matrix is not PSD'
+            return 'Gram Matrix is not positive definite'
         else:
             try:
                 alpha=cho_solve((L,True),Y_train)
@@ -221,7 +221,7 @@ def KRR_indexing(K1,Y_train,index_train,index_test,lam):
     try:
         L=np.linalg.cholesky(K)
     except:
-        return 'Gram matrix is not PSD'
+        return 'Gram Matrix is not positive definite'
     else:
         try:
             alpha=cho_solve((L,True),Y_train)
@@ -242,7 +242,7 @@ def KRR_local(X_train,Q_train,Y_train,X_test,Q_test,best_params):
     try:
             L=np.linalg.cholesky(K)
     except:
-        return 'Gram matrix is not PSD'
+        return 'Gram Matrix is not positive definite'
     else:
         try:
             alpha=cho_solve((L,True),Y_train)
@@ -312,7 +312,7 @@ def KRR_soap(X_train,Y_train,X_test,kernel='average',metric='rbf',gamma=1,lam=1e
     try:
             L=np.linalg.cholesky(K)
     except:
-        return 'Gram matrix is not PSD'
+        return 'Gram Matrix is not positive definite'
     else:
         try:
             alpha=cho_solve((L,True),Y_train)
