@@ -43,7 +43,7 @@ preds = KRR_local(fchl[train_idx], charges[train_idx], energies[train_idx], fchl
 Kernel ridge regression with a pre-computed kernel matrix
 '''
 from qml.kernels import get_local_symmetric_kernel
-K = get_local_symmetric_kernel(fchl, charges, SIGMA= 1) #calculating the kernel for the entire dataset
+K = get_local_symmetric_kernel(fchl, charges, SIGMA= 1) #calculating the kernel for the entire dataset, evaluating the symmetric kernel cuts the calculation time in half
 
 from KernelRidge import KRR_indexing
 preds = KRR_indexing(K, energies[train_idx], train_idx, test_idx, lam = 1e-6)
