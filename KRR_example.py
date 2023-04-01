@@ -2,14 +2,27 @@ import numpy as np
 data = np.load('qm7_test.npz',allow_pickle=True)
 charges, coords, energies = data['charges'], data['coords'], data['Y']
 
+
+'''
+generate a global (cm) and local (fchl19) representation for examples
+'''
 from qml.representations import generate_coulomb_matrix, generate_fchl_acsf
 cm = np.array([generate_coulomb_matrix(q, r, size = 23) for q,r in zip(charges, coords)])
 fchl = np.array([generate_fchl_acsf(q, r, elements = np.unique(np.concatenate(charges)), pad=23) for q,r in zip(charges,coords)])
 
+
+'''
+train and test indices for example
+'''
 train_idx, test_idx = range(1000), range(1000, 2000)
 
+
+'''
+hyper-parameter search grid
+'''
 param_grid={'lambda':[1e-3,1e-6,1e-9,1e-10],
-            'length':[10**i for i in range(-2,4)]} #hyper-parameter search grid
+            'length':[10**i for i in range(-2,4)]} 
+
 
 ''' 
 Global Kernel ridge regression
