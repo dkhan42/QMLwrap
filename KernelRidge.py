@@ -231,13 +231,23 @@ def KRR_indexing(K1,Y_train,index_train,index_test,lam):
             k=K1[index_train][:,index_test]
             return np.dot(k.T,alpha)
 
-def KRR_local(X_train,Q_train,Y_train,X_test,Q_test,best_params):
+def KRR_local(X_train,Q_train,Y_train,X_test,Q_test,kernel,best_params):
     """
     Returns the KRR predictions for local representations. Available options for the kernels are the local Gaussian and Laplacian kernels
      as implemented in the QML-code library.
     """
     sigma,lam = best_params['length'], best_params['lambda']
-    K=kernels.get_local_symmetric_kernel(X_train,Q_train,[sigma])
+    if kernel in ['gaussian','rbf','Gaussian']:
+        K=kernels.get_local_symmetric_kernel(X_train,Q_train,[sigma])
+    elif kernel=='laplacian':
+        K=kernels.get_local_symmetric_kernel_laplacian(X_train,Q_train,[sigma])
+    elif kernel=='mbdf':
+        K = kernels.get_local_symmetric_kernel_mbdf(X_train, Q_train, sigma)
+    elif kernel == 'matern1':
+        K = kernels.get_local_symmetric_kernel_matern(X_train, Q_train, sigma, order=1)
+    elif kernel == 'matern2':
+        K = kernels.get_local_symmetric_kernel_matern(X_train, Q_train, sigma, order=2)
+    #K=kernels.get_local_symmetric_kernel(X_train,Q_train,[sigma])
     K+=(np.eye(K.shape[0])*lam)
     try:
             L=np.linalg.cholesky(K)
@@ -249,7 +259,16 @@ def KRR_local(X_train,Q_train,Y_train,X_test,Q_test,best_params):
         except:
             return 'Cholesky decomposition failed, check distance matrices'
         else:
-            k=kernels.get_local_kernels(X_train,X_test,Q_train,Q_test,[sigma]).T
+            if kernel in ['gaussian','rbf','Gaussian']:
+                k=kernels.get_local_kernels(X_train,X_test,Q_train,Q_test,[sigma]).T
+            elif kernel=='laplacian':
+                k=kernels.get_local_kernel_laplacian(X_train,X_test,Q_train,Q_test,[sigma]).T
+            elif kernel=='mbdf':
+                k = kernels.get_local_kernel_mbdf(X_train, X_test, Q_train, Q_test, sigma).T
+            elif kernel == 'matern1':
+                k = kernels.get_local_kernel_matern(X_train, X_test, Q_train, Q_test, sigma, order=1).T
+            elif kernel=='matern2':
+                k = kernels.get_local_kernel_matern(X_train, X_test, Q_train, Q_test, sigma, order=2).T
             return np.dot(k.T,alpha)
 
 def GridSearchCV_local(X,Q,Y,params,kernel='Gaussian',cv=4):
