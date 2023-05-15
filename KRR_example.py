@@ -31,13 +31,13 @@ from KernelRidge import GridSearchCV, KRR_global
 
 #Hyper-parameter optimization using cross-validated grid searcch
 best_params = GridSearchCV(cm[train_idx],energies[train_idx], param_grid, 
-                           kernel = 'laplacian', norm = 1, cv = 4) #4-fold cross-validated grid search, use kernel = 'gaussian', norm = 2 for the gaussian kernel
+                           kernel = 'laplacian', norm = 1, cv = 4) #4-fold cross-validated grid search, use kernel = 'rbf', norm = 2 for the gaussian kernel
 
 print(best_params) #print to see the dictionary containing the best found hyper params and the corresponding best mean absolute error
 
 #performing kernel ridge regression using the best hyper-parameters found
 preds = KRR_global(cm[train_idx], energies[train_idx], cm[test_idx], 
-            best_params, kernel='laplacian', norm=1) #use kernel = 'gaussian', norm = 2 for the gaussian kernel, can mix-match kernels and norms for fun (and large errors)
+            best_params, kernel='laplacian', norm=1) #use kernel = 'rbf', norm = 2 for the gaussian kernel, can mix-match kernels and norms for fun (and large errors)
 
 
 ''' 
