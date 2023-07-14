@@ -78,7 +78,7 @@ def covariance(dist,kernel,params):
     elif kernel=='polynomial':
         K=((params['sigma0']**2)+((params['sigma1']**2)*dist))**params['order']
         return K
-    elif kernel=='rbf':
+    elif kernel in ['rbf','gaussian','Gaussian']:
         dist=dist/(params['length'])
         return np.exp(-(dist**2)/2)
     elif kernel=='laplacian':
@@ -127,7 +127,7 @@ def GridSearchCV(X,Y,params,cv=4,kernel='rbf',norm=2,FCHL=False,local=False,q=No
         else:
             dist=[(p_distance(X_train[i],X_train[i],p=norm),
             p_distance(X_train[i],X_test[i],p=norm)) for i in range(cv)]
-    if kernel in ['rbf','laplacian','matern1','matern2']:
+    if kernel in ['rbf','gaussian','Gaussian','laplacian','matern1','matern2']:
         mae=np.inf
         for i,j in product(params['lambda'],params['length']):
             mae_new=[]
