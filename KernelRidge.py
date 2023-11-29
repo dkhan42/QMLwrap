@@ -233,7 +233,7 @@ def KRR_indexing(K1,Y_train,index_train,index_test,lam):
 
 def KRR_local(X_train,Q_train,Y_train,X_test,Q_test,kernel,best_params):
     """
-    Returns the KRR predictions for local representations. Available options for the kernels are the local Gaussian and Laplacian kernels
+    Returns the KRR predictions for local representations. Available options for the kernels are the local Gaussian, Laplacian, Exponential-Euclidean, Matern 3/2, Matern 5/2 kernels
      as implemented in the QML-code library.
     """
     sigma,lam = best_params['length'], best_params['lambda']
